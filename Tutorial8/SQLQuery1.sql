@@ -129,3 +129,31 @@ select t.IdTrip,t.Name,t.Description,t.DateFrom,t.DateTo,t.MaxPeople,c.Name from
 join Country_Trip ct on t.IdTrip = ct.IdTrip
 join Country c on ct.IdCountry = c.IdCountry
 Order by t.IdTrip
+
+select * from Client
+delete from Client where IdClient between 1002 and 1020
+insert into Client(FirstName,LastName,Email,Telephone,Pesel)
+values('a','b','asdf','23423','23423412')
+
+rollback
+
+select * from Client c 
+Join Client_Trip ct ON c.IdClient = ct.IdClient
+Join Trip t ON ct.IdTrip = t.IdTrip
+
+select count(*) from Trip
+
+
+SELECT c.Name
+        FROM Country c
+        JOIN Country_Trip ct ON c.IdCountry = ct.IdCountry
+        WHERE ct.IdTrip = 1
+
+
+SELECT t.IdTrip,t.Name,t.Description,t.DateFrom,t.DateTo,t.MaxPeople,clt.RegisteredAt,clt.PaymentDate
+FROM Client cl JOIN Client_Trip clt ON cl.IdClient = clt.IdClient
+JOIN Trip t ON clt.IdTrip = t.IdTrip
+--where cl.IdClient = 1
+Order by cl.IdClient
+
+select count(*) from Client_Trip ct join Trip t on t.IdTrip = ct.IdTrip and t.IdTrip=3

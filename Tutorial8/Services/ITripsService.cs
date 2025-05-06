@@ -7,4 +7,5 @@ public interface ITripsService
     Task<List<TripDTO>> GetTrips();
     Task<TripDTO> GetTrip(int id);
     Task<bool> DoesTripExist(int id);
+    Task<bool> IsTripFull(int id);
 }

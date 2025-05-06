@@ -8,5 +8,4 @@ public class ClientDTO
     public string Email { get; set; }
     public string Telephone { get; set; }
     public string Pesel { get; set; }
-    TripDTO tripDTO { get; set; }
 }

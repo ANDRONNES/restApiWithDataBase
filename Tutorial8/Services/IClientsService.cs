@@ -7,5 +7,7 @@ public interface IClientsService
     Task<List<ClientDTO>> GetClients();
     Task<ClientDTO> GetClient(string id);
     Task<bool> DoesClientExist(string id);
-    // Task<List<ClientDTO>> GetClientsTrips();
+    Task<ClientTripDTO> GetClientsTrips(string id);
+    Task<int> CreateUser(CreateClientDTO dto);
+    Task RegisterClientOnTrip(string id, int tripId);
 }

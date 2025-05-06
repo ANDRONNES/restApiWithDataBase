@@ -129,4 +129,34 @@ public class TripsService : ITripsService
             return count > 0;
         }
     }
+
+    public async Task<bool> IsTripFull(int id)
+    {
+        int maxPeople = 0;
+        int count = 0;
+        string command = @"select count(*) 
+                           from Client_Trip ct join Trip t on t.IdTrip = ct.IdTrip and t.IdTrip=@id";
+        string maxCount = "select MaxPeople from Trip where IdTrip=@id";
+        using (SqlConnection conn = new SqlConnection(_connectionString))
+        {
+            await conn.OpenAsync();
+            using (SqlCommand cmd = new SqlCommand(maxCount, conn))
+            {
+                cmd.Parameters.AddWithValue("@id", id);
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    maxPeople = reader.GetInt32(0);
+                }
+            }
+            using (SqlCommand cmd = new SqlCommand(command, conn))
+            {
+                cmd.Parameters.AddWithValue("@id", id);
+
+                await conn.OpenAsync();
+                count = (int)await cmd.ExecuteScalarAsync();
+                
+            }
+        }
+        return count < maxPeople;
+    }
 }
