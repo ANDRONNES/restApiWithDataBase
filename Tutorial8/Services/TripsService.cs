@@ -145,18 +145,24 @@ public class TripsService : ITripsService
                 cmd.Parameters.AddWithValue("@id", id);
                 using (var reader = await cmd.ExecuteReaderAsync())
                 {
-                    maxPeople = reader.GetInt32(0);
+                    if (await reader.ReadAsync())
+                    {
+                        maxPeople = reader.GetInt32(0);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Trip not found.");
+                    }
                 }
             }
+
             using (SqlCommand cmd = new SqlCommand(command, conn))
             {
                 cmd.Parameters.AddWithValue("@id", id);
-
-                await conn.OpenAsync();
                 count = (int)await cmd.ExecuteScalarAsync();
-                
             }
         }
-        return count < maxPeople;
+
+        return count >= maxPeople;
     }
 }

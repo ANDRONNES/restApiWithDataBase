@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Microsoft.CodeAnalysis.Elfie.Diagnostics;
+using Microsoft.Data.SqlClient;
 using Tutorial8.Models.DTOs;
 
 namespace Tutorial8.Services;
@@ -46,7 +47,7 @@ public class ClientsService : IClientsService
         return clients;
     }
 
-    public async Task<ClientDTO> GetClient(string id)
+    public async Task<ClientDTO> GetClient(int id)
     {
         ClientDTO client = null;
         string command = "SELECT * FROM Client Where IdClient = @Id";
@@ -75,7 +76,7 @@ public class ClientsService : IClientsService
         return client;
     }
 
-    public async Task<bool> DoesClientExist(string id)
+    public async Task<bool> DoesClientExist(int id)
     {
         string command = "SELECT COUNT(*) FROM Client Where IdClient = @id";
         using (SqlConnection conn = new SqlConnection(_connectionString))
@@ -89,7 +90,7 @@ public class ClientsService : IClientsService
         }
     }
 
-    public async Task<ClientTripDTO> GetClientsTrips(string id)
+    public async Task<ClientTripDTO> GetClientsTrips(int id)
     {
         ClientTripDTO clientsTrips = null;
         string queryForClient = "SELECT IdClient,FirstName,LastName FROM Client Where IdClient = @Id";
@@ -201,9 +202,60 @@ public class ClientsService : IClientsService
         }
     }
 
-    public Task RegisterClientOnTrip(string id, int tripId)
+    public async Task RegisterClientOnTrip(int id, int tripId)
     {
-        string cmd = "Update Client_Trip Set ";
-        return null;
+        string query = @"INSERT INTO Client_Trip(IdClient, IdTrip, RegisteredAt) 
+                       VALUES(@IdClient, @IdTrip, @RegisteredAt)";
+
+        using (SqlConnection conn = new SqlConnection(_connectionString))
+        {
+            await conn.OpenAsync();
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@IdClient", id);
+                cmd.Parameters.AddWithValue("@IdTrip", tripId);
+                int currDate = int.Parse(DateTime.Now.ToString("yyyyMMdd"));
+                cmd.Parameters.AddWithValue("@RegisteredAt", currDate);
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+    }
+
+    public async Task<bool> IsClientAlreadyOnThisTrip(int id, int tripId)
+    {
+        int count = 0;
+        string query = "SELECT * FROM Client_Trip Where IdClient = @IdClient AND IdTrip = @IdTrip";
+        using (SqlConnection conn = new SqlConnection(_connectionString))
+        using (SqlCommand cmd = new SqlCommand(query, conn))
+        {
+            await conn.OpenAsync();
+            cmd.Parameters.AddWithValue("@IdClient", id);
+            cmd.Parameters.AddWithValue("@IdTrip", tripId);
+
+            using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    count = reader.GetInt32(0);
+                }
+            }
+        }
+        return count > 0;
+    }
+
+    public async Task<bool> DeleteClientFromTrip(int id, int tripId)
+    {
+        string query = "Delete From Client_Trip Where IdClient = @IdClient AND IdTrip = @IdTrip";
+        using (SqlConnection conn = new SqlConnection(_connectionString))
+        {
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@IdClient", id);
+                cmd.Parameters.AddWithValue("@IdTrip", tripId);
+                await conn.OpenAsync();
+                int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                return rowsAffected > 0;
+            }
+        }
     }
 }

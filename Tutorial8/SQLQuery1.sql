@@ -157,3 +157,8 @@ JOIN Trip t ON clt.IdTrip = t.IdTrip
 Order by cl.IdClient
 
 select count(*) from Client_Trip ct join Trip t on t.IdTrip = ct.IdTrip and t.IdTrip=3
+select MaxPeople from Trip where IdTrip=1
+
+select * from Client_Trip
+
+delete from Client_Trip where IdClient=1 and IdTrip = 10

@@ -26,7 +26,7 @@ public class ClientsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetClient(string id)
+    public async Task<IActionResult> GetClient(int id)
     {
         if (!await _clientsService.DoesClientExist(id))
         {
@@ -39,7 +39,7 @@ public class ClientsController : ControllerBase
 
 
     [HttpGet("{id}/trips")]
-    public async Task<IActionResult> GetClientTrips(string id)
+    public async Task<IActionResult> GetClientTrips(int id)
     {
         if (!await _clientsService.DoesClientExist(id))
         {
@@ -75,24 +75,41 @@ public class ClientsController : ControllerBase
 
 
     [HttpPut("{id}/trips/{tripId}")]
-    public async Task<IActionResult> RegisterClientOnTrip(string id, int tripId)
+    public async Task<IActionResult> RegisterClientOnTrip(int id, int tripId)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
         if (!await _clientsService.DoesClientExist(id))
         {
-            return NotFound();
+            return Conflict("Client not found");
         }
 
         if (!await _tripsService.DoesTripExist(tripId))
         {
-            return NotFound();
+            return Conflict("Trip not found");
         }
 
-        if (!await _tripsService.IsTripFull(tripId))
+        if (await _tripsService.IsTripFull(tripId))
         {
-            return NotFound();
+            return Conflict("Trip is full");
         }
-        
-        _clientsService.RegisterClientOnTrip(id, tripId);
+
+        if (await _clientsService.IsClientAlreadyOnThisTrip(id,tripId))
+        {
+            return Conflict("Client is already on this trip");
+        }
+
+        await _clientsService.RegisterClientOnTrip(id, tripId);
+        return Created();
+    }
+
+    [HttpDelete("{id}/trips/{tripId}")]
+    public async Task<IActionResult> DeleteRegestrationFromTrip(int id, int tripId)
+    {
+        _clientsService.DeleteClientFromTrip(id, tripId);
         return Ok();
     }
 }
