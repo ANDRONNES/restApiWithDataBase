@@ -14,23 +14,31 @@ namespace Tutorial8.Controllers
         {
             _tripsService = tripsService;
         }
-
+        
+        
+        /// <summary>
+        ///   Zwraca wszystkie wycieczki z BD.
+        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetTrips()
+        public async Task<IActionResult> GetTrips(CancellationToken cancellationToken)
         {
-            var trips = await _tripsService.GetTrips();
+            var trips = await _tripsService.GetTripsAsync(cancellationToken);
             return Ok(trips);
         }
-
+        
+        
+        /// <summary>
+        ///   Zwraca pojedynczą wycieczkę z BD razem z listą krajów.
+        /// </summary>
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTrip(int id)
+        public async Task<IActionResult> GetTrip(int id, CancellationToken cancellationToken)
         {
-            if (await _tripsService.DoesTripExist(id))
+            if (await _tripsService.DoesTripExistAsync(id, cancellationToken))
             {
                 return NotFound();
             }
 
-            var trip = await _tripsService.GetTrip(id);
+            var trip = await _tripsService.GetTripAsync(id, cancellationToken);
             return Ok(trip);
         }
     }

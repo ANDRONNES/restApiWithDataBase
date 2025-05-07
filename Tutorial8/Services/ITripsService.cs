@@ -4,8 +4,8 @@ namespace Tutorial8.Services;
 
 public interface ITripsService
 {
-    Task<List<TripDTO>> GetTrips();
-    Task<TripDTO> GetTrip(int id);
-    Task<bool> DoesTripExist(int id);
-    Task<bool> IsTripFull(int id);
+    Task<List<TripDTO>> GetTripsAsync(CancellationToken cancellationToken);
+    Task<TripDTO> GetTripAsync(int id,CancellationToken cancellationToken);
+    Task<bool> DoesTripExistAsync(int id,CancellationToken cancellationToken);
+    Task<bool> IsTripFullAsync(int id,CancellationToken cancellationToken);
 }

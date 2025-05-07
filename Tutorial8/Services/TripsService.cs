@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using Tutorial8.Exceptions;
 using Tutorial8.Models.DTOs;
 
 namespace Tutorial8.Services;
@@ -12,7 +13,7 @@ public class TripsService : ITripsService
         _connectionString = configuration.GetConnectionString("DefaultConnection");
     }
 
-    public async Task<List<TripDTO>> GetTrips()
+    public async Task<List<TripDTO>> GetTripsAsync(CancellationToken cancellationToken)
     {
         var trips = new List<TripDTO>();
 
@@ -22,11 +23,12 @@ public class TripsService : ITripsService
                            JOIN Country_Trip ct ON t.IdTrip = ct.IdTrip
                            JOIN Country c ON ct.IdCountry = c.IdCountry
                            ORDER BY t.IdTrip";
+        //Powieramy wszystkie dane z Trip wraz z Krajem(ktory do tej wyciecki należy)
 
         using (SqlConnection conn = new SqlConnection(_connectionString))
         using (SqlCommand cmd = new SqlCommand(command, conn))
         {
-            await conn.OpenAsync();
+            await conn.OpenAsync(cancellationToken);
 
             using (var reader = await cmd.ExecuteReaderAsync())
             {
@@ -62,18 +64,20 @@ public class TripsService : ITripsService
         return trips;
     }
 
-    public async Task<TripDTO> GetTrip(int id)
+    public async Task<TripDTO> GetTripAsync(int id, CancellationToken cancellationToken)
     {
         string queryForTrip = "Select * from trip where IdTrip = @id";
+        //Pobieramy wycieczkę o danym id
         string queryForCountry = @"SELECT c.Name
                                    FROM Country c
                                    JOIN Country_Trip ct ON c.IdCountry = ct.IdCountry
                                    WHERE ct.IdTrip = @id";
+        //Pobieramy nazwę kraju, który jest przypisany do danej wycieczki
         TripDTO trip = null;
 
         using (SqlConnection conn = new SqlConnection(_connectionString))
         {
-            await conn.OpenAsync();
+            await conn.OpenAsync(cancellationToken);
             using (SqlCommand cmd = new SqlCommand(queryForTrip, conn))
             {
                 cmd.Parameters.AddWithValue("@id", id);
@@ -116,30 +120,33 @@ public class TripsService : ITripsService
         return trip;
     }
 
-    public async Task<bool> DoesTripExist(int id)
+    public async Task<bool> DoesTripExistAsync(int id, CancellationToken cancellationToken)
     {
         string command = "SELECT COUNT(*) FROM Trip Where IdTrip = @id";
+        //sprawdzamy czy jest wycieczka o podanym Id
         using (SqlConnection conn = new SqlConnection(_connectionString))
         using (SqlCommand cmd = new SqlCommand(command, conn))
         {
             cmd.Parameters.AddWithValue("@id", id);
 
-            await conn.OpenAsync();
+            await conn.OpenAsync(cancellationToken);
             int count = (int)await cmd.ExecuteScalarAsync();
             return count > 0;
         }
     }
 
-    public async Task<bool> IsTripFull(int id)
+    public async Task<bool> IsTripFullAsync(int id, CancellationToken cancellationToken)
     {
         int maxPeople = 0;
         int count = 0;
         string command = @"select count(*) 
                            from Client_Trip ct join Trip t on t.IdTrip = ct.IdTrip and t.IdTrip=@id";
+        //Sorawdzamy liczbe rejestracji wycieczki o podanym Id(czyli ile jest zarejestrowanych osób na tą wycieczkę 
         string maxCount = "select MaxPeople from Trip where IdTrip=@id";
+        //Pobieramy maksymalną liczbę osób dla wyciecki o podanym Id
         using (SqlConnection conn = new SqlConnection(_connectionString))
         {
-            await conn.OpenAsync();
+            await conn.OpenAsync(cancellationToken);
             using (SqlCommand cmd = new SqlCommand(maxCount, conn))
             {
                 cmd.Parameters.AddWithValue("@id", id);
@@ -151,7 +158,7 @@ public class TripsService : ITripsService
                     }
                     else
                     {
-                        throw new InvalidOperationException("Trip not found.");
+                        throw new NotFoundException("Trip not found.");
                     }
                 }
             }
